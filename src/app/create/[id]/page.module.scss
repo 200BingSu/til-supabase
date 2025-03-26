@@ -63,9 +63,8 @@
   }
   &_body {
     display: flex;
-    align-items: flex-start; // 추후 수정
-    justify-content: center;
-
+    flex-direction: column;
+    gap: 20px;
     width: 100%;
     height: calc(100vh - 250px);
 
