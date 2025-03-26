@@ -52,12 +52,8 @@ function MarkdownDialog({ item, updateContent }: BasicBoardProps) {
     item.content ? item.content : ""
   );
 
-  const [startDate, setStartDate] = useState<Date | string>(
-    item.startDate ? item.startDate : new Date().toISOString()
-  );
-  const [endDate, setEndDate] = useState<Date | string>(
-    item.endDate ? item.endDate : new Date().toISOString()
-  );
+  const [startDate, setStartDate] = useState<Date | undefined>(new Date());
+  const [endDate, setEndDate] = useState<Date | undefined>(new Date());
 
   const [isCompleted, setIsComplted] = useState<boolean>(
     item.isCompleted ? item.isCompleted : false
@@ -115,11 +111,12 @@ function MarkdownDialog({ item, updateContent }: BasicBoardProps) {
           </DialogTitle>
           <div className={styles.dialog_calendarBox}>
             {/* 잠시 뒤 날짜 전달 */}
+
             <LabelCalendar
               label="From"
               required={false}
               selectedDate={startDate}
-              onDateChange={setStartDate}
+              onDateChange={setEndDate}
             />
             <LabelCalendar
               label="To"

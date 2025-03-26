@@ -18,8 +18,8 @@ import { Dispatch, SetStateAction } from "react";
 interface LabelCalendarProps {
   label: string;
   required: boolean;
-  selectedDate: Date | string;
-  onDateChange?: Dispatch<SetStateAction<string | Date>>;
+  selectedDate: Date | undefined;
+  onDateChange?: Dispatch<SetStateAction<undefined | Date>>;
 }
 // required : true 면  날짜 선택
 // required : false 면  날짜 선택 불가

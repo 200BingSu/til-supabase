@@ -3,8 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ChevronUp } from "lucide-react";
 import LabelCalendar from "@/components/common/calendar/LabelCalendar";
-import MarkdownDialog from "../dialog/MarkdownDialog";
-import { Input } from "@/components/ui/input";
+import MarkdownDialog from "../dialog/MarkDownDialog";
 
 // contents 배열에 대한 타입 정의
 interface BoardContent {
@@ -42,12 +41,12 @@ function BasicBoard({ item, updateContent }: BasicBoardProps) {
           <LabelCalendar
             label="From"
             required={true}
-            selectedDate={item.startDate}
+            selectedDate={new Date(item.startDate)}
           />
           <LabelCalendar
             label="To"
             required={true}
-            selectedDate={item.endDate}
+            selectedDate={new Date(item.endDate)}
           />
           {/* <div className="flex items-center gap-3">
             <span className="text-[#6d6d6d]">From</span>

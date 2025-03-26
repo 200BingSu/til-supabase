@@ -147,14 +147,14 @@ function Page() {
               <LabelCalendar
                 label="From"
                 required={false}
-                selectedDate={startDate}
-                onDateChange={setStarDate}
+                selectedDate={startDate as Date}
+                onDateChange={() => setStarDate}
               />
               <LabelCalendar
                 label="To"
-                required={true}
-                selectedDate={endDate}
-                onDateChange={setEndDate}
+                required={false}
+                selectedDate={endDate as Date}
+                onDateChange={() => setEndDate}
               />
             </div>
             <Button
