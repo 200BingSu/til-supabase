@@ -18,11 +18,47 @@ import LabelCalendar from "@/components/common/calendar/LabelCalendar";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { toast } from "sonner";
+import { createTodo } from "@/app/actions/todos-action";
 
 function MarkDownDialog() {
+  const [open, setOpen] = useState<boolean>(false);
+
   const [content, setContent] = useState<string | undefined>("");
+  const [title, setTitle] = useState<string | undefined>("");
+
+  // todo  wkrtjd
+  const onSubmit = async () => {
+    console.log("자료 등록");
+    if (!title || !content) {
+      toast.error("입력 항목을 확인해주세요", {
+        description: "제목과 내용을 입력해주세요.",
+        duration: 3000,
+      });
+      return;
+    }
+    // 서버 액션 실행하기
+    const { data, error, status } = await createTodo({
+      title,
+      content,
+    });
+    if (error) {
+      toast.error("등록 실패", {
+        description: `Error ${error.message}`,
+        duration: 3000,
+      });
+      return;
+    }
+    toast.success("성공했습니다", {
+      description: "Superbase에 글이 등록되었습니다.",
+      duration: 3000,
+    });
+    setOpen(false);
+    setTitle("");
+    setContent("");
+  };
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <span
           className="font-normal text-gray-400 hover:text-gray-500
@@ -39,6 +75,8 @@ function MarkDownDialog() {
               <input
                 type="text"
                 placeholder="Write title for your board"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
                 className={styles.dialog_titleBox_title}
               />
             </div>
@@ -60,6 +98,7 @@ function MarkDownDialog() {
             <Button
               variant={"ghost"}
               className="font-normal text-gray-400 hover:bg-gray-50 hover:text-gray-500"
+              onClick={() => setOpen(false)}
             >
               Cancle
             </Button>
@@ -67,6 +106,7 @@ function MarkDownDialog() {
               type="submit"
               variant={"ghost"}
               className="font-normal border-orange-500 bg-orange-400 text-white hover:bg-orange-500 hover:text-white"
+              onClick={onSubmit}
             >
               Save
             </Button>
