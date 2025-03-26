@@ -1,5 +1,7 @@
 "use client";
 import { useParams } from "next/navigation";
+// nanoid
+import { nanoid } from "nanoid";
 // scss
 import styles from "@/app/create/[id]/page.module.scss";
 // action
@@ -12,7 +14,6 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { nanoid } from "nanoid";
 import Image from "next/image";
 
 // contents 배열에 대한 타입 정의
@@ -32,6 +33,25 @@ function Page() {
   const [contents, setContents] = useState<BoardContent[]>([]);
   const [startDate, setStarDate] = useState<string | Date>("");
   const [endDate, setEndDate] = useState<string | Date>("");
+
+  // 컨텐츠 데이터 업데이트 함수
+  const updateContent = async (newData: BoardContent) => {
+    console.log("최종전달 ", newData);
+
+    const newContentArr = contents.map((item) => {
+      if (item.boardId === newData.boardId) {
+        return newData;
+      }
+      return item;
+    });
+    // 서버에 Row 를 업데이트 합니다.
+    const { data, error, status } = await updateTodoId(
+      Number(id),
+      JSON.stringify(newContentArr)
+    );
+
+    fetchGetTodoId();
+  };
 
   // id 에 해당하는 Row 데이터를 읽어오기
   const fetchGetTodoId = async () => {
@@ -58,17 +78,21 @@ function Page() {
   };
 
   // 컨텐츠 추가하기
-  const onCreateContent = async () => {
+  const initData: BoardContent = {
+    boardId: nanoid(),
+    title: "",
+    content: "",
+    startDate: new Date().toISOString(),
+    endDate: new Date().toISOString(),
+    isCompleted: false,
+  };
+
+  const onCreateContent = async (newData: BoardContent) => {
+    const addContent = newData;
     // 기본으로 추가될 내용
-    const addContent: BoardContent = {
-      boardId: nanoid(),
-      title: "",
-      content: "",
-      startDate: new Date().toISOString(),
-      endDate: new Date().toISOString(),
-      isCompleted: false,
-    };
+
     const updateContent = [...contents, addContent];
+    console.log("updateContent : ", updateContent);
     // 서버에 Row 를 업데이트 합니다.
     const { data, error, status } = await updateTodoId(
       Number(id),
@@ -120,13 +144,23 @@ function Page() {
           {/* 캘린더 선택 추가 */}
           <div className={styles.calendarBox}>
             <div className={styles.calendarBox_calendar}>
-              <LabelCalendar label="From" required={false} />
-              <LabelCalendar label="To" required={true} />
+              <LabelCalendar
+                label="From"
+                required={false}
+                selectedDate={startDate}
+                onDateChange={setStarDate}
+              />
+              <LabelCalendar
+                label="To"
+                required={true}
+                selectedDate={endDate}
+                onDateChange={setEndDate}
+              />
             </div>
             <Button
               variant={"outline"}
               className="w-[15%] text-white bg-orange-400 border-orange-500 hover:bg-orange-400 hover:text-white cursor-pointer"
-              onClick={onCreateContent}
+              onClick={() => onCreateContent(initData)}
             >
               Add New Board
             </Button>
@@ -138,11 +172,14 @@ function Page() {
         {/* conents 배열의 개수 만큼 출력이 되어야 함. */}
         {contents.length == 0 ? (
           <div className={styles.container_body_infoBox}>
-            <span className={styles.title}>There is no board yet.</span>
+            <span className={styles.title}>There is no board yet. </span>
             <span className={styles.subTitle}>
-              Click th button and start flashing!
+              Click the button and start flashing!
             </span>
-            <button type="button" onClick={onCreateContent}>
+            <button
+              className={styles.button}
+              onClick={() => onCreateContent(initData)}
+            >
               <Image
                 src="/assets/images/round-button.svg"
                 alt="add board"
@@ -152,9 +189,13 @@ function Page() {
             </button>
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-start w-full gap-4">
+          <div className="flex flex-col items-center justify-start w-full h-full gap-4">
             {contents.map((item) => (
-              <BasicBoard key={item.boardId} />
+              <BasicBoard
+                key={item.boardId}
+                item={item}
+                updateContent={updateContent}
+              />
             ))}
           </div>
         )}
