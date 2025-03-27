@@ -109,7 +109,7 @@ function MarkdownDialog({ item, updateContent }: BasicBoardProps) {
               />
             </div>
           </DialogTitle>
-          <div className={styles.dialog_calendarBox}>
+          <div className="flex items-center w-full gap-4 p-4">
             {/* 잠시 뒤 날짜 전달 */}
 
             <LabelCalendar

@@ -1,11 +1,16 @@
 "use client";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 // nanoid
 import { nanoid } from "nanoid";
 // scss
 import styles from "@/app/create/[id]/page.module.scss";
 // action
-import { getTodoId, updateTodoId } from "@/app/actions/todos-action";
+import {
+  deleteTodo,
+  getTodoId,
+  updateTodoId,
+  updateTodoIdTitle,
+} from "@/app/actions/todos-action";
 // component
 import BasicBoard from "@/components/common/board/BasicBoard";
 // shadcn/ui
@@ -15,6 +20,7 @@ import { Progress } from "@/components/ui/progress";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import Image from "next/image";
+import { ChevronLeftIcon } from "lucide-react";
 
 // contents 배열에 대한 타입 정의
 interface BoardContent {
@@ -27,13 +33,47 @@ interface BoardContent {
 }
 
 function Page() {
+  //router
+  const router = useRouter();
   const { id } = useParams();
   // 데이터 출력 state
-  const [title, setTitle] = useState<string | null>("");
+  const [title, setTitle] = useState<string>("");
   const [contents, setContents] = useState<BoardContent[]>([]);
   const [startDate, setStarDate] = useState<string | Date>("");
   const [endDate, setEndDate] = useState<string | Date>("");
+  // 보드 삭제 함수
+  const handleDeleteBoard = async () => {
+    console.log("제거될 boardId", id);
+    const { error, status } = await deleteTodo(Number(id));
+    console.log("error", error);
+    console.log("status", status);
+    if (!error) {
+      router.push("/");
+    }
+  };
 
+  // 타이틀 저장 함수
+  const handleSaveTitle = async () => {
+    console.log("title", title);
+    const { data, error, status } = await updateTodoIdTitle(Number(id), title);
+    console.log("data", data);
+    console.log("error", error);
+    console.log("status", status);
+  };
+  // 컨텐츠 삭제 함수
+  const deleteContent = async (deleteBoardId: string) => {
+    console.log("삭제할 컨텐츠 boardId", deleteBoardId);
+    const tempContentArr = contents.filter(
+      (item) => item.boardId !== deleteBoardId
+    );
+    // 서버에 Row 를 업데이트 합니다.
+    const { data, error, status } = await updateTodoId(
+      Number(id),
+      JSON.stringify(tempContentArr)
+    );
+
+    fetchGetTodoId();
+  };
   // 컨텐츠 데이터 업데이트 함수
   const updateContent = async (newData: BoardContent) => {
     console.log("최종전달 ", newData);
@@ -125,11 +165,34 @@ function Page() {
     <div className={styles.container}>
       {/* 상단 */}
       <header className={styles.container_header}>
+        {/* board 메뉴 */}
+        <div className="absolute flex w-full items-center justify-center p-3">
+          <div className="flex-1">
+            <Button
+              variant={"outline"}
+              onClick={() => {
+                router.push("/");
+              }}
+            >
+              <ChevronLeftIcon className="w-4 h-4" />
+            </Button>
+          </div>
+          <div className="flex items-center gap-4">
+            <Button variant={"outline"} onClick={handleSaveTitle}>
+              저장
+            </Button>
+            <Button variant={"outline"} onClick={handleDeleteBoard}>
+              삭제
+            </Button>
+          </div>
+        </div>
         <div className={styles.container_header_contents}>
           <input
             type="text"
             placeholder="Enter Title Here"
             className={styles.input}
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
           />
           {/* 진행율 */}
           <div className={styles.progressBar}>
@@ -190,11 +253,12 @@ function Page() {
           </div>
         ) : (
           <div className="flex flex-col items-center justify-start w-full h-full gap-4">
-            {contents.map((item) => (
+            {contents.map((item, index) => (
               <BasicBoard
-                key={item.boardId}
+                key={index}
                 item={item}
                 updateContent={updateContent}
+                deleteContent={deleteContent}
               />
             ))}
           </div>
