@@ -21,6 +21,8 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import Image from "next/image";
 import { ChevronLeftIcon } from "lucide-react";
+import { useAtom } from "jotai";
+import { sidebarStateAtom } from "@/app/store";
 
 // contents 배열에 대한 타입 정의
 interface BoardContent {
@@ -33,52 +35,58 @@ interface BoardContent {
 }
 
 function Page() {
-  //router
   const router = useRouter();
   const { id } = useParams();
+  // jotai
+  const [sidebarState, setSidebarState] = useAtom(sidebarStateAtom);
+
   // 데이터 출력 state
   const [title, setTitle] = useState<string>("");
   const [contents, setContents] = useState<BoardContent[]>([]);
-  const [startDate, setStarDate] = useState<string | Date>("");
-  const [endDate, setEndDate] = useState<string | Date>("");
+  const [startDate, setStarDate] = useState<undefined | Date>(new Date());
+  const [endDate, setEndDate] = useState<undefined | Date>(new Date());
+  // Progress Bar 처리
   const [completeCount, setCompleteCount] = useState<number>(0);
   const [totalCount, setTotalCount] = useState<number>(0);
-  // page 삭제 함수
+
+  // Page 삭제 함수
   const handleDeleteBoard = async () => {
-    console.log("제거될 boardId", id);
+    // console.log(id, "제거하라");
     const { error, status } = await deleteTodo(Number(id));
-    console.log("error", error);
-    console.log("status", status);
     if (!error) {
-      router.push("/");
+      setSidebarState("delete");
     }
   };
-
   // 타이틀 저장 함수
   const handleSaveTitle = async () => {
-    console.log("title", title);
-    const { data, error, status } = await updateTodoIdTitle(Number(id), title);
-    console.log("data", data);
-    console.log("error", error);
-    console.log("status", status);
+    const { data, error, status } = await updateTodoIdTitle(
+      Number(id),
+      title,
+      startDate?.toISOString() as string,
+      endDate?.toISOString() as string
+    );
+    // jotai State 갱신
+    setSidebarState("titleChange");
+    toast.success("수정이 완료되었습니다.");
   };
   // 컨텐츠 삭제 함수
   const deleteContent = async (deleteBoardId: string) => {
-    console.log("삭제할 컨텐츠 boardId", deleteBoardId);
-    const tempContentArr = contents.filter(
+    // console.log("삭제할 컨텐츠 boardId ", deleteBoardId);
+    const tempConentArr = contents.filter(
       (item) => item.boardId !== deleteBoardId
     );
     // 서버에 Row 를 업데이트 합니다.
     const { data, error, status } = await updateTodoId(
       Number(id),
-      JSON.stringify(tempContentArr)
+      JSON.stringify(tempConentArr)
     );
 
     fetchGetTodoId();
   };
+
   // 컨텐츠 데이터 업데이트 함수
   const updateContent = async (newData: BoardContent) => {
-    console.log("최종전달 ", newData);
+    // console.log("최종전달 ", newData);
 
     const newContentArr = contents.map((item) => {
       if (item.boardId === newData.boardId) {
@@ -113,23 +121,21 @@ function Page() {
     });
 
     setTitle(data?.title ? data.title : "");
-    setStarDate(data?.start_date ? data.start_date : new Date());
-    setEndDate(data?.end_date ? data.end_date : new Date());
+    setStarDate(data?.start_date ? new Date(data.start_date) : new Date());
+    setEndDate(data?.end_date ? new Date(data.end_date) : new Date());
     const temp = data?.contents ? JSON.parse(data.contents as string) : [];
     setContents(temp);
+    // 목록 갱신시
+    calcCompletedCount(temp);
+  };
+  // contents 의 isCompleted 가 true 인 갯수 파악하기
+  const calcCompletedCount = (gogo: BoardContent[]) => {
+    const arr = gogo.filter((item) => item.isCompleted === true);
+    // console.log("count : ", arr.length);
+    setCompleteCount(arr.length);
+    setTotalCount((arr.length / gogo.length) * 100);
+  };
 
-    calcCompleteCount(temp);
-  };
-  // 콘텐츠의 isComplete가 true인 수 파악하기
-  const calcCompleteCount = (temp: BoardContent[]) => {
-    let count = 0;
-    temp.forEach((item) => {
-      if (item.isCompleted === true) {
-        count++;
-      }
-    });
-    setCompleteCount(count);
-  };
   // 컨텐츠 추가하기
   const initData: BoardContent = {
     boardId: nanoid(),
@@ -145,7 +151,7 @@ function Page() {
     // 기본으로 추가될 내용
 
     const updateContent = [...contents, addContent];
-    console.log("updateContent : ", updateContent);
+    // console.log("updateContent : ", updateContent);
     // 서버에 Row 를 업데이트 합니다.
     const { data, error, status } = await updateTodoId(
       Number(id),
@@ -176,29 +182,24 @@ function Page() {
 
   return (
     <div className={styles.container}>
+      {/* board 메뉴 */}
+      <div className="absolute flex w-full items-center justify-center p-3">
+        <div className="flex-1">
+          <Button variant={"outline"} onClick={() => router.push("/")}>
+            <ChevronLeftIcon className="w-4 h-4" />
+          </Button>
+        </div>
+        <div className="flex gap-2">
+          <Button variant={"outline"} onClick={handleSaveTitle}>
+            저장
+          </Button>
+          <Button variant={"outline"} onClick={handleDeleteBoard}>
+            삭제
+          </Button>
+        </div>
+      </div>
       {/* 상단 */}
       <header className={styles.container_header}>
-        {/* board 메뉴 */}
-        <div className="absolute flex w-full items-center justify-center p-3">
-          <div className="flex-1">
-            <Button
-              variant={"outline"}
-              onClick={() => {
-                router.push("/");
-              }}
-            >
-              <ChevronLeftIcon className="w-4 h-4" />
-            </Button>
-          </div>
-          <div className="flex items-center gap-4">
-            <Button variant={"outline"} onClick={handleSaveTitle}>
-              저장
-            </Button>
-            <Button variant={"outline"} onClick={handleDeleteBoard}>
-              삭제
-            </Button>
-          </div>
-        </div>
         <div className={styles.container_header_contents}>
           <input
             type="text"
@@ -214,7 +215,7 @@ function Page() {
             </span>
             {/* Progress 컴포넌트 배치 */}
             <Progress
-              value={(completeCount / contents.length) * 100}
+              value={totalCount}
               className="w-[30%] h-2"
               indicateColor="bg-orange-500"
             />
@@ -225,14 +226,14 @@ function Page() {
               <LabelCalendar
                 label="From"
                 required={false}
-                selectedDate={startDate as Date}
-                onDateChange={() => setStarDate}
+                selectedDate={startDate}
+                onDateChange={setStarDate}
               />
               <LabelCalendar
                 label="To"
                 required={false}
-                selectedDate={endDate as Date}
-                onDateChange={() => setEndDate}
+                selectedDate={endDate}
+                onDateChange={setEndDate}
               />
             </div>
             <Button
@@ -268,9 +269,9 @@ function Page() {
           </div>
         ) : (
           <div className="flex flex-col items-center justify-start w-full h-full gap-4 overflow-y-scroll">
-            {contents.map((item, index) => (
+            {contents.map((item) => (
               <BasicBoard
-                key={index}
+                key={item.boardId}
                 item={item}
                 updateContent={updateContent}
                 deleteContent={deleteContent}

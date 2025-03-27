@@ -7,10 +7,14 @@ import { Input } from "../ui/input";
 import { createTodo, getTodos, TodosRow } from "@/app/actions/todos-action";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { useAtom } from "jotai";
+import { sidebarStateAtom } from "@/app/store";
 
 function SideNavigation() {
   // router
   const router = useRouter();
+  // jotai
+  const [sidebarState, setSidebarState] = useAtom(sidebarStateAtom);
   const [todos, setTodos] = useState<TodosRow[] | null>([]);
   // create
   const onCreate = async () => {
@@ -35,6 +39,7 @@ function SideNavigation() {
     });
     // 데이터 추가 성공시 할일 등록창으로 이동시킴
     // http://localhost:3000/create/ [data.id] 로 이동
+    setSidebarState("make page");
     router.push(`/create/${data.id}`);
   };
 
@@ -57,8 +62,16 @@ function SideNavigation() {
   };
 
   useEffect(() => {
-    fetchGetTodos();
-  }, []);
+    console.log("sidebarState", sidebarState);
+    if (sidebarState !== "default") {
+      fetchGetTodos();
+
+      if (sidebarState === "delete") {
+        router.push("/");
+      }
+    }
+  }, [sidebarState]);
+
   return (
     <div className={styles.container}>
       {/* 검색창 */}
