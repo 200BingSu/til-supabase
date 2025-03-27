@@ -41,7 +41,9 @@ function Page() {
   const [contents, setContents] = useState<BoardContent[]>([]);
   const [startDate, setStarDate] = useState<string | Date>("");
   const [endDate, setEndDate] = useState<string | Date>("");
-  // 보드 삭제 함수
+  const [completeCount, setCompleteCount] = useState<number>(0);
+  const [totalCount, setTotalCount] = useState<number>(0);
+  // page 삭제 함수
   const handleDeleteBoard = async () => {
     console.log("제거될 boardId", id);
     const { error, status } = await deleteTodo(Number(id));
@@ -115,8 +117,19 @@ function Page() {
     setEndDate(data?.end_date ? data.end_date : new Date());
     const temp = data?.contents ? JSON.parse(data.contents as string) : [];
     setContents(temp);
-  };
 
+    calcCompleteCount(temp);
+  };
+  // 콘텐츠의 isComplete가 true인 수 파악하기
+  const calcCompleteCount = (temp: BoardContent[]) => {
+    let count = 0;
+    temp.forEach((item) => {
+      if (item.isCompleted === true) {
+        count++;
+      }
+    });
+    setCompleteCount(count);
+  };
   // 컨텐츠 추가하기
   const initData: BoardContent = {
     boardId: nanoid(),
@@ -196,10 +209,12 @@ function Page() {
           />
           {/* 진행율 */}
           <div className={styles.progressBar}>
-            <span className={styles.progressBar_status}>1/10 completed!</span>
+            <span className={styles.progressBar_status}>
+              {completeCount}/{contents.length} completed!
+            </span>
             {/* Progress 컴포넌트 배치 */}
             <Progress
-              value={33}
+              value={(completeCount / contents.length) * 100}
               className="w-[30%] h-2"
               indicateColor="bg-orange-500"
             />
@@ -252,7 +267,7 @@ function Page() {
             </button>
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-start w-full h-full gap-4">
+          <div className="flex flex-col items-center justify-start w-full h-full gap-4 overflow-y-scroll">
             {contents.map((item, index) => (
               <BasicBoard
                 key={index}

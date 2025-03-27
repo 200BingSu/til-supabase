@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 // SCSS
 import styles from "@/components/common/dialog/MarkdownDialog.module.scss";
 
@@ -58,6 +58,7 @@ function MarkdownDialog({ item, updateContent }: BasicBoardProps) {
   const [isCompleted, setIsComplted] = useState<boolean>(
     item.isCompleted ? item.isCompleted : false
   );
+  const [checked, setChecked] = useState<boolean>(item.isCompleted);
 
   // todo 작성
   const onSubmit = async () => {
@@ -77,7 +78,7 @@ function MarkdownDialog({ item, updateContent }: BasicBoardProps) {
       endDate: endDate,
       title: title,
       content: content,
-      isCompleted: isCompleted,
+      isCompleted: checked,
     };
     updateContent(tempContent);
 
@@ -86,7 +87,9 @@ function MarkdownDialog({ item, updateContent }: BasicBoardProps) {
     // setTitle("");
     // setContent("");
   };
-
+  useEffect(() => {
+    setChecked(item.isCompleted);
+  }, [item]);
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -99,7 +102,15 @@ function MarkdownDialog({ item, updateContent }: BasicBoardProps) {
         <DialogHeader>
           <DialogTitle>
             <div className={styles.dialog_titleBox}>
-              <Checkbox className="w-5 h-5" />
+              <Checkbox
+                className="w-5 h-5"
+                onCheckedChange={(e) => {
+                  item.isCompleted = !item.isCompleted;
+                  setChecked(item.isCompleted);
+                  console.log(item.isCompleted);
+                }}
+                checked={checked}
+              />
               <input
                 type="text"
                 placeholder="Write a title for your board"
