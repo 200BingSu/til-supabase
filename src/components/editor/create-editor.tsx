@@ -63,20 +63,19 @@ export const CreateEditor = () => {
   });
 
   const onSubmit = async () => {
+    const { data, error, status } = await createBlog({
+      title,
+      content,
+    });
     if (!title || !content) {
-      toast.error("필수 항목이 입력되지 않았습니다.", {
-        description: `${!title && !content ? "제목과 내용을 작성해주세요." : !title ? "제목을 입력해주세요" : "내용을 입력해주세요"}`,
-        duration: 3000,
-      });
+      toast.error("내용과 제목을 입력해주세요.");
       return;
     }
-    const { data, error, status } = await createBlog({
-      title: title,
-      content: content,
-    });
+
+    toast.success("글이 성공적으로 등록되었습니다.");
+    // 내용 초기화
     setTitle("");
-    setContent("");
-    toast.success("게시물이 생성되었습니다.", { duration: 3000 });
+    editor?.commands.setContent("");
   };
   return (
     <div className="w-[95%] my-3  flex flex-col bg-white ">

@@ -1,10 +1,6 @@
-# file 업로드 적용
-
-- /src/components/editor/addbutton.tsx
-
-```tsx
 "use client";
-import { uploadFile } from "@/actions/todo-storage-actions";
+import { uploadFile } from "@/app/actions/blog-storage-action";
+// 이미지 주소를 생성해주는 것(업로드 후 문자열로)
 import { getImageUrl } from "@/utils/storage-utils";
 import { Editor } from "@tiptap/react";
 
@@ -57,4 +53,3 @@ export default function AddPhoto({ editor, onImageUpload }: AddPhotoProps) {
     </button>
   );
 }
-```
