@@ -2,6 +2,8 @@
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Toolbar from "./toolbar";
+// editor css
+import styles from "@/components/editor/editor.module.css";
 
 // extension : 내용 정렬
 import TextAlign from "@tiptap/extension-text-align";
@@ -16,8 +18,15 @@ import Highlight from "@tiptap/extension-highlight";
 import Link from "@tiptap/extension-link";
 // Image
 import Image from "@tiptap/extension-image";
+import { Button } from "@/components/ui/button";
+import { createBlog } from "@/app/actions/blog-action";
+import { useState } from "react";
+import { toast } from "sonner";
 
 export const CreateEditor = () => {
+  const [title, setTitle] = useState<string>("");
+  const [content, setContent] = useState<string>("");
+
   // 배경색
   const lowlight = createLowlight(common);
   const CustomHighlight = Highlight.configure({
@@ -45,14 +54,52 @@ export const CreateEditor = () => {
       }),
       Image,
     ],
-    content: "<p>안녕하세요.</p>",
+    // 초기값
+    content: content,
+    // 내용 갱신 시 실행
+    onUpdate({ editor }) {
+      setContent(editor.getHTML());
+    },
   });
+
+  const onSubmit = async () => {
+    if (!title || !content) {
+      toast.error("필수 항목이 입력되지 않았습니다.", {
+        description: `${!title && !content ? "제목과 내용을 작성해주세요." : !title ? "제목을 입력해주세요" : "내용을 입력해주세요"}`,
+        duration: 3000,
+      });
+      return;
+    }
+    const { data, error, status } = await createBlog({
+      title: title,
+      content: content,
+    });
+    setTitle("");
+    setContent("");
+    toast.success("게시물이 생성되었습니다.", { duration: 3000 });
+  };
   return (
-    <div className="w-full flex flex-col">
+    <div className="w-[95%] my-3  flex flex-col bg-white ">
       <h3>블로그 작성하기</h3>
-      <div>
-        {editor && <Toolbar editor={editor} />}
-        <EditorContent editor={editor} />
+      <div className="w-full flex-col items-center justify-center">
+        <div className="w-full my-2">
+          <input
+            type="text"
+            className="w-full p-2 border-2 border-gray-300 rounded-md"
+            placeholder="제목을 입력해주세요"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
+        </div>
+        <div className={styles.editor}>
+          {editor && <Toolbar editor={editor} />}
+          <EditorContent editor={editor} />
+        </div>
+        <div className="flex w-full items-center justify-center p-2">
+          <Button type="button" className="px-4 py-2" onClick={onSubmit}>
+            Add Blog
+          </Button>
+        </div>
       </div>
     </div>
   );
