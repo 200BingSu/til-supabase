@@ -23,8 +23,10 @@ import { createBlog } from "@/app/actions/blog-action";
 import { useState } from "react";
 import { toast } from "sonner";
 import { deleteFile } from "@/app/actions/blog-storage-action";
+import { useRouter } from "next/navigation";
 
 export const CreateEditor = () => {
+  const router = useRouter();
   const [title, setTitle] = useState<string>("");
   const [content, setContent] = useState<string>("");
 
@@ -155,6 +157,9 @@ export const CreateEditor = () => {
     // 내용 초기화
     setTitle("");
     editor?.commands.setContent("");
+    if (!error) {
+      router.push("/blog");
+    }
   };
   return (
     <div className="w-[95%] my-3  flex flex-col bg-white ">
