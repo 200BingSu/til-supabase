@@ -6,7 +6,7 @@ import AddPhoto from "@/components/editor/addbutton";
 
 interface ToolbarProps {
   editor: Editor;
-  onImageUpload: (file: File) => Promise<string | null>;
+  onImageUpload?: (file: File) => Promise<string | null>;
 }
 
 const Toolbar = ({ editor, onImageUpload }: ToolbarProps) => {
