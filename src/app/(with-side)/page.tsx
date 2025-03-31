@@ -1,10 +1,10 @@
 "use client";
 import React from "react";
-import styles from "@/app/page.module.scss";
+import styles from "@/app/(with-side)/page.module.scss";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { createTodo } from "./actions/todos-action";
+import { createTodo } from "@/app/actions/todos-action";
 
 function Home() {
   const router = useRouter();

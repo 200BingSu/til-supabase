@@ -1,20 +1,28 @@
 "use client";
-import React, { useEffect, useState } from "react";
-import styles from "@/components/common/SideNavigation.module.scss";
-import { Button } from "../ui/button";
-import { Dot, Search } from "lucide-react";
-import { Input } from "../ui/input";
+import { useEffect, useState } from "react";
+
+// actions
 import { createTodo, getTodos, TodosRow } from "@/app/actions/todos-action";
+
+// scss
+import styles from "@/components/common/navigation/SideNavigation.module.scss";
+
+// sahdcn/ui
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Dot, Search } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useAtom } from "jotai";
 import { sidebarStateAtom } from "@/app/store";
+import { signOut } from "@/lib/supabase/actions";
 
 function SideNavigation() {
-  // router
+  // jotai 상태 사용하기
+  const [sidebarState, setSideState] = useAtom(sidebarStateAtom);
+  // 라우터 이동
   const router = useRouter();
-  // jotai
-  const [sidebarState, setSidebarState] = useAtom(sidebarStateAtom);
+
   const [todos, setTodos] = useState<TodosRow[] | null>([]);
   // create
   const onCreate = async () => {
@@ -37,32 +45,33 @@ function SideNavigation() {
       description: "데이터 추가에 성공하였습니다",
       duration: 3000,
     });
+    console.log("등록된 id ", data.id);
     // 데이터 추가 성공시 할일 등록창으로 이동시킴
     // http://localhost:3000/create/ [data.id] 로 이동
-    setSidebarState("make page");
+
     router.push(`/create/${data.id}`);
   };
-
   // read
   const fetchGetTodos = async () => {
     const { data, error, status } = await getTodos();
-    console.log(data);
+    // 에러 발생시
     if (error) {
-      toast.error("데이터 조회 실패", {
-        description: `데이터 조회 실패하였습니다. ${error.message}.`,
+      toast.error("데이터조회실패", {
+        description: `데이터조회에 실패하였습니다. ${error.message}`,
         duration: 3000,
       });
       return;
     }
+    // 최종 데이터
     toast.success("데이터 조회 성공", {
-      description: "데이터 조회에 성공하였습니다",
+      description: "데이터조회에 성공하였습니다",
       duration: 3000,
     });
+    setSideState("default");
     setTodos(data);
   };
 
   useEffect(() => {
-    console.log("sidebarState", sidebarState);
     if (sidebarState !== "default") {
       fetchGetTodos();
 
@@ -72,36 +81,37 @@ function SideNavigation() {
     }
   }, [sidebarState]);
 
+  const fetchSignOut = async () => {
+    await signOut();
+    router.push("/");
+  };
+
   return (
     <div className={styles.container}>
       {/* 검색창 */}
       <div className={styles.container_searchBox}>
         <Input
           type="text"
-          placeholder="검색어를 입력하세요"
+          placeholder="검색어를 입력하세요."
           className="focus-visible:right"
         />
         <Button variant={"outline"} size={"icon"}>
           <Search className="w-4 h-4" />
         </Button>
       </div>
-      {/* 페이지 추가 버튼 */}
+      {/* page 추가 버튼 */}
       <div className={styles.container_buttonBox}>
         <Button
           variant={"outline"}
-          className=" text-orange-500 border-orange-400
-          hover:bg-orange-50 hover:text-orange-500"
+          className="text-orange-500 border-orange-400 hover:bg-orange-50 hover:text-orange-500"
           onClick={onCreate}
         >
           Add New Page
         </Button>
         <Button
           variant={"outline"}
-          className="flex-1 text-orange-500 border-orange-400
-          hover:bg-orange-50 hover:text-orange-500"
-          onClick={() => {
-            router.push("/blog");
-          }}
+          className="flex-1 text-orange-500 border-orange-400 hover:bg-orange-50 hover:text-orange-500"
+          onClick={() => router.push("/blog")}
         >
           Blog
         </Button>
@@ -109,26 +119,33 @@ function SideNavigation() {
       {/* 추가 항목 출력 영역 */}
       <div className={styles.container_todos}>
         <div className={styles.container_todos_label}>
-          {/* 로그아웃 버튼 */}
-          {"홍길동"}님 Your To Do
+          {/* 로그아웃 버튼 배치 */}
+          {"홍길동"}님 Your Todo
         </div>
+
+        <div>
+          <button
+            className="border rounded px-2.5 py-2"
+            type="submit"
+            onClick={fetchSignOut}
+          >
+            Sign Out
+          </button>
+        </div>
+
         <div className={styles.container_todos_list}>
-          {todos?.map((item) => {
-            return (
-              <div
-                key={item.id}
-                className="flex items-center py-2 bg-[#f5f5f4] rounded-sm cursor-pointer"
-                onClick={() => {
-                  router.push(`/create/${item.id}`);
-                }}
-              >
-                <Dot className="mr-1, text-green-400" />
-                <span className="text-sm">
-                  {item.title ? item.title : "No title"}
-                </span>
-              </div>
-            );
-          })}
+          {todos!.map((item) => (
+            <div
+              key={item.id}
+              className="flex items-center py-2 bg-[#f5f5f4] rounded-sm cursor-pointer"
+              onClick={() => router.push(`/create/${item.id}`)}
+            >
+              <Dot className="mr-1 text-green-400" />
+              <span className="text-sm">
+                {item.title ? item.title : "No Title"}
+              </span>
+            </div>
+          ))}
         </div>
       </div>
     </div>
